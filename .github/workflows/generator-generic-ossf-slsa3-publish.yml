@@ -10,57 +10,39 @@
 # The provenance file can be verified using https://github.com/slsa-framework/slsa-verifier.
 # For more information about SLSA and how it improves the supply-chain, visit slsa.dev.
 
-name: SLSA generic generator
+name: Python CI
+
 on:
-  workflow_dispatch:
-  release:
-    types: [created]
+  push:
+    branches:
+      - main  # Trigger the workflow when a push is made to the 'main' branch
+  pull_request:
+    branches:
+      - main  # Trigger on pull requests made to the 'main' branch
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    outputs:
-      digests: ${{ steps.hash.outputs.digests }}
+  test:
+    runs-on: ubuntu-latest  # Run on the latest version of Ubuntu
 
     steps:
-      - uses: actions/checkout@v4
+    # Step 1: Check out the repository
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      # ========================================================
-      #
-      # Step 1: Build your artifacts.
-      #
-      # ========================================================
-      - name: Build artifacts
-        run: |
-            # These are some amazing artifacts.
-            echo "artifact1" > artifact1
-            echo "artifact2" > artifact2
+    # Step 2: Set up Python
+    - name: Set up Python 3.x
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'  # Set the Python version you are using
 
-      # ========================================================
-      #
-      # Step 2: Add a step to generate the provenance subjects
-      #         as shown below. Update the sha256 sum arguments
-      #         to include all binaries that you generate
-      #         provenance for.
-      #
-      # ========================================================
-      - name: Generate subject for provenance
-        id: hash
-        run: |
-          set -euo pipefail
+    # Step 3: Install dependencies
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt  # If you have any dependencies
 
-          # List the artifacts the provenance will refer to.
-          files=$(ls artifact*)
-          # Generate the subjects (base64 encoded).
-          echo "hashes=$(sha256sum $files | base64 -w0)" >> "${GITHUB_OUTPUT}"
+    # Step 4: Run tests
+    - name: Run Python tests
+      run: |
+        python -m unittest discover  # Run your tests using unittest or any testing framework you use
 
-  provenance:
-    needs: [build]
-    permissions:
-      actions: read   # To read the workflow path.
-      id-token: write # To sign the provenance.
-      contents: write # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.4.0
-    with:
-      base64-subjects: "${{ needs.build.outputs.digests }}"
-      upload-assets: true # Optional: Upload to a new release
