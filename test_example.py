@@ -1,5 +1,5 @@
 import unittest
-from day4 import greet_user  # Import the function from your Python script
+from day4 import greet_user,add_num,power  # Import the function from your Python script
 
 class TestYourFunction(unittest.TestCase):
     
