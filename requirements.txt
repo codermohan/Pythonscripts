@@ -1,1 +1,5 @@
 unittest  # Python's built-in testing module (not required to install separately)
+
+requests
+numpy
+pandas
